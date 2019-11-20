@@ -1,5 +1,9 @@
 # Code for ECAI 2020: Constrained Clustering Via Post Processing
  
+## Introduction
+
+
+The source for IDEC and DCC implementation is here [Deep Constrained Clustering](https://github.com/blueocean92/deep_constrained_clustering).
 ## Installation
 
 
