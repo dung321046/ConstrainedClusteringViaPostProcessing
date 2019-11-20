@@ -4,8 +4,8 @@ import random
 from sklearn.cluster import KMeans
 
 from lib_deep_clustering.datasets import MNIST, FashionMNIST, Reuters
-from .gurobi_import import *
-from .utilities import *
+from models.gurobi_import import *
+from models.utilities import *
 
 keep_import()
 
@@ -88,7 +88,7 @@ def clustering_pw(n, k, dis_matrix, ml, cl):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Pairwise MNIST Example')
+    parser = argparse.ArgumentParser(description='Parameters for Kmeans with postprocess ')
     parser.add_argument('--data', type=str, default="MNIST", metavar='N', help='dataset(MNIST, Fashion, Reuters)')
     parser.add_argument('--', type=str, default="MNIST", metavar='N', help='dataset(MNIST, Fashion, Reuters)')
     args = parser.parse_args()

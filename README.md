@@ -19,12 +19,16 @@ pip install -r requirements.txt
 
 ## Running Constrained Clustering Experiments
 
-
+```
+export PYTHONPATH="./"
+```
 #### Step 1: Generate dataset
 
 
 #### Step 2: Run models
-
+```
+python models/kmeans-post.py
+```
 
 #### Step 2: Run reports
 
