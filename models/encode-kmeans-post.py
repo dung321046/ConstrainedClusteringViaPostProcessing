@@ -1,16 +1,12 @@
 import argparse
-import os
 import timeit
 
-from sklearn.cluster import KMeans
-
 from lib_deep_clustering.datasets import MNIST, FashionMNIST, Reuters
+from lib_deep_clustering.dec_with_pw import IDEC
 from models.gurobi_import import *
 from models.utilities import *
 
 keep_import()
-
-TEST_SIZE = 1
 
 
 def build_dis(x, centers):
@@ -70,33 +66,46 @@ def clustering_pw(n, k, dis_matrix, ml, cl):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Parameters for Kmeans with postprocess ')
+    parser = argparse.ArgumentParser(description='Pairwise MNIST Example')
     parser.add_argument('--data', type=str, default="MNIST", metavar='N', help='dataset(MNIST, Fashion, Reuters)')
     args = parser.parse_args()
-    mnist_train = MNIST('./dataset/mnist', train=True, download=True)
+    args.pretrain = "./model/idec_mnist.pt"
+    mnist_train = MNIST('./model_weight/mnist', train=True, download=True)
     X = mnist_train.train_data
     Y = mnist_train.train_labels
     k = 10
+    idec = IDEC(input_dim=784, z_dim=10, n_clusters=10,
+                encodeLayer=[500, 500, 2000], decodeLayer=[2000, 500, 500], activation="relu", dropout=0)
     if args.data == "Fashion":
-        fashionmnist_train = FashionMNIST('./dataset/fashion_mnist', train=True, download=True)
+        args.pretrain = "./model/idec_fashion.pt"
+        fashionmnist_train = FashionMNIST('./model_weight/fashion_mnist', train=True, download=True)
         X = fashionmnist_train.train_data
         Y = fashionmnist_train.train_labels
     elif args.data == "Reuters":
+        args.pretrain = "./model_weight/idec_reuters.pt"
         reuters_train = Reuters('./dataset/reuters', train=True, download=True)
         X = reuters_train.train_data
         Y = reuters_train.train_labels
         k = 4
+        idec = IDEC(input_dim=2000, z_dim=10, n_clusters=4,
+                    encodeLayer=[500, 500, 2000], decodeLayer=[2000, 500, 500], activation="relu", dropout=0)
+    # Take the encoding of IDEC as input
+    idec.load_model(args.pretrain)
+    latent = idec.encodeBatch(X)
+    X = np.asarray(latent)
+
     Y = np.asarray(Y)
-    X = np.asarray(X)
     N = len(Y)
     folder_name = "./sample_test/" + args.data
+    import os
+    from sklearn.cluster import KMeans
 
     for pairwise_factor in [6]:
         pairwise_num = int(pairwise_factor * N / 100)
         stat_pw = []
-        for test in range(TEST_SIZE):
+        for test in range(1):
             # Read pairwise
-            test_folder = os.path.join(folder_name, str(pairwise_num) + "/test" + str(test).zfill(2))
+            test_folder = folder_name + str(pairwise_num) + "/test" + str(test).zfill(2)
             must_link, cannot_link = read_ml_cl(test_folder)
 
             start = timeit.default_timer()
@@ -107,9 +116,9 @@ if __name__ == "__main__":
                 freq[i] += 1
             centers = np.asarray(kmeans.cluster_centers_)
             dis_matrix = build_dis(X, centers)
-            print("Acc Kmeans:", calculate_acc(Y, clustering))
             for epoch_id in range(300):
                 model = clustering_pw(N, k, dis_matrix, must_link, cannot_link)
+                # model.write('clustering-car-pw.lp')
                 model.optimize()
                 if model.SolCount == 0:
                     print("No solution found, status %d" % model.Status)
@@ -141,10 +150,12 @@ if __name__ == "__main__":
             time_running = (float)(timeit.default_timer() - start)
             print("Finish COP-KMeans!")
 
-            os.makedirs(os.path.join(test_folder, "kmeans-post"), exist_ok=True)
             clusters = np.asarray(partition)
-            np.savetxt(test_folder + "/kmeans-post/label.txt", clusters, fmt='%s')
+            os.makedirs(test_folder + "/encode-kmeans-post", exist_ok=True)
+            # Save the clustering result
+            np.savetxt(test_folder + "/encode-kmeans-post/label.txt", clusters, fmt='%s')
+            # Save runtime, acc and nmi
             _acc = calculate_acc(Y, clusters)
             _nmi = normalized_mutual_info_score(Y, clusters, average_method="arithmetic")
             local_stat = np.asarray([time_running, _acc, _nmi])
-            np.savetxt(test_folder + "/kmeans-post/stat.txt", local_stat, fmt='%.6f')
+            np.savetxt(test_folder + "/encode-kmeans-post/stat.txt", local_stat, fmt='%.6f')
