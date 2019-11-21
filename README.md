@@ -59,3 +59,16 @@ python models/pw-csize-ilp.py --data $DATA --csize True
 
 ## Running Fairness Experiments
 
+#### Step 1: Generate neighbor set for individual fairness constraints
+
+```
+python fairness/generate_neighbor.py 
+```
+
+### Step 2: Run individual and/or group fairness
+
+```
+python fairness/run_individual_fairness.py
+python fairness/run_group_fairness.py
+python fairness/run_combine_fairness.py
+```
