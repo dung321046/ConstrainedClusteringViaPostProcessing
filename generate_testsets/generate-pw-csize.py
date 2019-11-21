@@ -20,7 +20,7 @@ if __name__ == "__main__":
                         help='number of epochs to train (default: 1)')
     parser.add_argument('--epochs', type=int, default=200, metavar='N',
                         help='number of epochs to train (default: 200)')
-    parser.add_argument('--pretrain', type=str, default="../model/idec_mnist.pt", metavar='N',
+    parser.add_argument('--pretrain', type=str, default="../model_weight/idec_mnist.pt", metavar='N',
                         help='directory for pre-trained weights')
     parser.add_argument('--data', type=str, default="MNIST", metavar='N', help='dataset(MNIST, Fashion, Reuters)')
     parser.add_argument('--use_pretrain', type=bool, default=True)
@@ -29,26 +29,26 @@ if __name__ == "__main__":
     ml_penalty, cl_penalty = 0.1, 1
     k = 10
     if args.data == "Fashion":
-        fashionmnist_train = FashionMNIST('../dataset/fashion_mnist', train=True, download=True)
+        fashionmnist_train = FashionMNIST('./dataset/fashion_mnist', train=True, download=True)
         X = fashionmnist_train.train_data
         y = fashionmnist_train.train_labels
-        args.pretrain = "../model/idec_fashion.pt"
+        args.pretrain = "./model_weight/idec_fashion.pt"
         ml_penalty = 1
         idec = IDEC(input_dim=784, z_dim=10, n_clusters=10,
                     encodeLayer=[500, 500, 2000], decodeLayer=[2000, 500, 500], activation="relu", dropout=0)
     elif args.data == "Reuters":
-        reuters_train = Reuters('../dataset/reuters', train=True, download=False)
+        reuters_train = Reuters('./dataset/reuters', train=True, download=True)
         X = reuters_train.train_data
         y = reuters_train.train_labels
-        args.pretrain = "../model/idec_reuters.pt"
+        args.pretrain = "../model_weight/idec_reuters.pt"
         k = 4
         idec = IDEC(input_dim=2000, z_dim=10, n_clusters=4,
                     encodeLayer=[500, 500, 2000], decodeLayer=[2000, 500, 500], activation="relu", dropout=0)
     else:
-        mnist_train = MNIST('../dataset/mnist', train=True, download=False)
+        mnist_train = MNIST('./dataset/mnist', train=True, download=True)
         X = mnist_train.train_data
         y = mnist_train.train_labels
-        args.pretrain = "../model/idec_mnist.pt"
+        args.pretrain = "./model_weight/idec_mnist.pt"
         idec = IDEC(input_dim=784, z_dim=10, n_clusters=10,
                     encodeLayer=[500, 500, 2000], decodeLayer=[2000, 500, 500], activation="relu", dropout=0)
     if args.use_pretrain:
