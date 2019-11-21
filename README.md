@@ -29,7 +29,7 @@ conda config --add channels http://conda.anaconda.org/gurobi
 conda install gurobi
 ```
 
-## Running Constrained Clustering Experiments
+## Running pairwise, cluster-size and attribute-level costraints experiments
 
 ```
 export PYTHONPATH="./"
@@ -46,8 +46,10 @@ python generate_testsets/generate-pw-csize.py --data $DATA
 
 #### Step 2: Run models
 ```
-python models/kmeans-post.py
+python models/encode-kmeans-post.py --data $DATA
+python models/pw-csize-ilp.py --data $DATA
 ```
 
-#### Step 2: Run reports
+
+## Running Fairness Experiments
 
