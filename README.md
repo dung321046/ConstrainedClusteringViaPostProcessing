@@ -2,8 +2,14 @@
  
 ## Introduction
 
+Constrained clustering has been studied almost twenty years ago. However, there are still room for research.
 
-The source for IDEC and DCC implementation is here [Deep Constrained Clustering](https://github.com/blueocean92/deep_constrained_clustering).
+This work proposed the novel approach by converting the output of many clustering algorithm to a cluster fractional allocation matrix (CFAM).  Then, takes it as an optimization problem with requirement to statisfy (combined) different types of  constraints.
+
+
+Moreover, we also shows practical application namely the attribute-level constraint and the (combine) fairness constraint.  
+  
+
 ## Installation
 
 
@@ -31,7 +37,8 @@ conda install gurobi
 
 ## Running pairwise, cluster-size and attribute-level costraints experiments
 
-### Step 0: Setup 
+### Step 0: Setup
+ 
 ```
 export PYTHONPATH="./"
 ```
@@ -39,6 +46,8 @@ export PYTHONPATH="./"
 Download:
 
 [IDEC weights](https://drive.google.com/drive/folders/1hJ7Dvwo_4GYgslaqL7-TlHzQGaV8Kp2j?usp=sharing)
+
+More details for IDEC and DCC is here [Deep Constrained Clustering](https://github.com/blueocean92/deep_constrained_clustering).
 
 #### Step 1: Generate dataset
 
