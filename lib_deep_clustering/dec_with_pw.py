@@ -10,7 +10,7 @@ from sklearn.metrics.cluster import normalized_mutual_info_score
 from torch.autograd import Variable
 from torch.nn import Parameter
 
-from lib.utils import acc
+from lib_deep_clustering.utils import acc
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 

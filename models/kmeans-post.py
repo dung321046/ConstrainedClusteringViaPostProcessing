@@ -1,5 +1,6 @@
 import argparse
-import random
+import os
+import timeit
 
 from sklearn.cluster import KMeans
 
@@ -24,7 +25,7 @@ def build_dis(x, centers):
     return dis_matrix
 
 
-def build_dis2(x, centers, changed_clusters):
+def adjust_dis_mtrx(x, centers, changed_clusters):
     n = len(x)
     dis_matrix = []
     for i in range(n):
@@ -33,25 +34,6 @@ def build_dis2(x, centers, changed_clusters):
             row.append(l2_distance(x[i], centers[j]))
         dis_matrix.append(row)
     return dis_matrix
-
-
-def generate_random_pair(y, num):
-    """
-    Generate random pairwise constraints.
-    """
-    ml_list = []
-    cl_list = []
-    while num > 0:
-        tmp1 = random.randint(0, y.shape[0] - 1)
-        tmp2 = random.randint(0, y.shape[0] - 1)
-        if tmp1 == tmp2:
-            continue
-        if y[tmp1] == y[tmp2]:
-            ml_list.append((tmp1, tmp2))
-        else:
-            cl_list.append((tmp1, tmp2))
-        num -= 1
-    return ml_list, cl_list
 
 
 def read_ml_cl(folder_name):
@@ -90,9 +72,8 @@ def clustering_pw(n, k, dis_matrix, ml, cl):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Parameters for Kmeans with postprocess ')
     parser.add_argument('--data', type=str, default="MNIST", metavar='N', help='dataset(MNIST, Fashion, Reuters)')
-    parser.add_argument('--', type=str, default="MNIST", metavar='N', help='dataset(MNIST, Fashion, Reuters)')
     args = parser.parse_args()
-    mnist_train = MNIST('./dataset/mnist', train=True, download=False)
+    mnist_train = MNIST('./dataset/mnist', train=True, download=True)
     X = mnist_train.train_data
     Y = mnist_train.train_labels
     k = 10
@@ -101,32 +82,26 @@ if __name__ == "__main__":
         X = fashionmnist_train.train_data
         Y = fashionmnist_train.train_labels
     elif args.data == "Reuters":
-        reuters_train = Reuters('./dataset/reuters', train=True, download=False)
+        reuters_train = Reuters('./dataset/reuters', train=True, download=True)
         X = reuters_train.train_data
         Y = reuters_train.train_labels
         k = 4
     Y = np.asarray(Y)
     X = np.asarray(X)
     N = len(Y)
-    feature_size = len(X[0])
-    folder_name = "../sample_test" + args.data
-    import os
-    import timeit
+    folder_name = "./sample_test/" + args.data
 
     for pairwise_factor in [6]:
-        # for pairwise_factor in [6]:
         pairwise_num = int(pairwise_factor * N / 100)
         stat_pw = []
         for test in range(TEST_SIZE):
-            test_folder = folder_name + str(pairwise_num) + "/test" + str(test).zfill(2)
-            if os.path.exists(test_folder + "/kmeans-post"):
-                continue
-            os.makedirs(test_folder + "/kmeans-post")
+            # Read pairwise
+            test_folder = os.path.join(folder_name, str(pairwise_num) + "/test" + str(test).zfill(2))
             must_link, cannot_link = read_ml_cl(test_folder)
+
             start = timeit.default_timer()
             kmeans = KMeans(k, n_init=20, random_state=1)
             clustering = np.asarray(kmeans.fit_predict(X))
-            print("kms:", clustering[:20])
             freq = np.full(k, 0)
             for i in clustering:
                 freq[i] += 1
@@ -135,17 +110,14 @@ if __name__ == "__main__":
             print("Acc Kmeans:", calculate_acc(Y, clustering))
             for epoch_id in range(300):
                 model = clustering_pw(N, k, dis_matrix, must_link, cannot_link)
-                # model.write('clustering-car-pw.lp')
                 model.optimize()
                 if model.SolCount == 0:
                     print("No solution found, status %d" % model.Status)
                     break
                 c = model.__data
                 partition = np.asarray(extract_cluster_id(N, c, k))
-                print("par:", partition[:20])
                 per_change = get_percent_change(clustering, partition)
-                print("Acc:", calculate_acc(Y, partition))
-                print("Change:", per_change)
+                print("Iter %2s - Acc: %.3f - Change: %.3f" % (epoch_id, calculate_acc(Y, partition), per_change))
                 if per_change < 0.001:
                     break
                 for i, center in enumerate(centers):
@@ -165,15 +137,14 @@ if __name__ == "__main__":
                 for i in range(k):
                     centers[i] = centers[i] / freq[i]
                 clustering = partition
-                build_dis2(X, centers, changed_clts)
+                adjust_dis_mtrx(X, centers, changed_clts)
             time_running = (float)(timeit.default_timer() - start)
             print("Finish COP-KMeans!")
-            from sklearn.metrics.cluster import normalized_mutual_info_score
 
+            os.makedirs(os.path.join(test_folder, "kmeans-post"), exist_ok=True)
             clusters = np.asarray(partition)
             np.savetxt(test_folder + "/kmeans-post/label.txt", clusters, fmt='%s')
-            acc_ = calculate_acc(Y, clusters)
-            nmi = normalized_mutual_info_score(Y, clusters, average_method="arithmetic")
-            local_stat = np.asarray([time_running, acc_, nmi])
-            print(acc_, nmi)
+            _acc = calculate_acc(Y, clusters)
+            _nmi = normalized_mutual_info_score(Y, clusters, average_method="arithmetic")
+            local_stat = np.asarray([time_running, _acc, _nmi])
             np.savetxt(test_folder + "/kmeans-post/stat.txt", local_stat, fmt='%.6f')

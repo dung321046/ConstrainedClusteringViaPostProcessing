@@ -13,22 +13,43 @@ git clone git@github.com:dung321046/ConstrainedClusteringViaPostProcessing.git
 cd ConstrainedClusteringViaPostProcessing/
 ```
 ### Step 2: Install Requirements
+
+Install conda 
+
+Install libs
+
 ```
-pip install -r requirements.txt 
+conda install --yes --file requirements.txt 
 ```
 
-## Running Constrained Clustering Experiments
+Install gurobipy
+
+```
+conda config --add channels http://conda.anaconda.org/gurobi
+conda install gurobi
+```
+
+## Running pairwise, cluster-size and attribute-level costraints experiments
 
 ```
 export PYTHONPATH="./"
 ```
 #### Step 1: Generate dataset
 
+Generate pairwise and cluster-size contraints
+
+```
+python generate_testsets/generate-pw-csize.py --data $DATA
+```
+
+
 
 #### Step 2: Run models
 ```
-python models/kmeans-post.py
+python models/encode-kmeans-post.py --data $DATA
+python models/pw-csize-ilp.py --data $DATA
 ```
 
-#### Step 2: Run reports
+
+## Running Fairness Experiments
 
