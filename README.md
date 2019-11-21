@@ -54,6 +54,7 @@ python generate_testsets/generate-pw-csize.py --data $DATA
 ```
 python models/encode-kmeans-post.py --data $DATA
 python models/pw-csize-ilp.py --data $DATA --csize True
+python models/attribute-level-ilp.py
 ```
 
 
