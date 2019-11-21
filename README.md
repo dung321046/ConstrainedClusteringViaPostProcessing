@@ -31,9 +31,15 @@ conda install gurobi
 
 ## Running pairwise, cluster-size and attribute-level costraints experiments
 
+### Step 0: Setup 
 ```
 export PYTHONPATH="./"
 ```
+
+Download:
+
+[IDEC weights](https://drive.google.com/drive/folders/1hJ7Dvwo_4GYgslaqL7-TlHzQGaV8Kp2j?usp=sharing)
+
 #### Step 1: Generate dataset
 
 Generate pairwise and cluster-size contraints
@@ -47,7 +53,7 @@ python generate_testsets/generate-pw-csize.py --data $DATA
 #### Step 2: Run models
 ```
 python models/encode-kmeans-post.py --data $DATA
-python models/pw-csize-ilp.py --data $DATA
+python models/pw-csize-ilp.py --data $DATA --csize True
 ```
 
 
