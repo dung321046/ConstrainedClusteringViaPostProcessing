@@ -18,7 +18,7 @@ def clustering_car_pw(n, k, dis_matrix, ml, cl, lower, upper):
     for i in range(n):
         for j in range(k):
             x[i, j] = model.addVar(obj=-dis_matrix[i, j], vtype="B", name="x[%s,%s]" % (i, j))
-    # Constraint for non-empty cluster. But not need for large dataset or exist cluster size constraints.
+    # Constraint for non-empty cluster but no need for large dataset or exist cluster size constraints.
     # for i in range(k):
     #     coef = []
     #     var = []
