@@ -6,16 +6,23 @@ import pandas as pd
 
 from fairness.utils import *
 
-alpha = 0.3215
-beta = 0.3415
+female_ratio_lower_bound = 0.3215
+female_ratio_upper_bound = 0.3415
+
+# Number of iterations for most-vote
+M = 10
 
 
 def run_model(N, k, obj_matrix):
+    '''
+    :param N:
+    :param k:
+    :param obj_matrix:
+    :return:
+    '''
     from fairness.model import clustering_fairness
 
     model = clustering_fairness(N, k, obj_matrix, mustlink_detail, nb_detail)
-    # model = clustering_fairness(N, k, cluster_dis_matrix, mustlink_detail, nb_detail)
-
     # model.write('clustering-fairness.lp')
     model.optimize()
     ans = {"time": model.Runtime}
@@ -30,8 +37,7 @@ def run_model(N, k, obj_matrix):
         ratios = ratios_by_cluster(partition, bin_att, k)
         ans["alpha"] = min(ratios)
         ans["beta"] = max(ratios)
-        ans["cluster-violates"] = get_cluster_violates(ratios, alpha, beta)
-        # print(to_str_ratios(ratios_by_cluster(partition, bin_att, k)))
+        ans["cluster-violates"] = get_cluster_violates(ratios, female_ratio_lower_bound, female_ratio_upper_bound)
         print("Constrained WCS:", ans["WCS"])
         ratios, num_violates = get_violates_and_ratios(nb_detail, partition)
         print("Num violates:", num_violates)
@@ -81,10 +87,10 @@ for i in range(10):
     start = timeit.default_timer()
     km_clusters = kmeans.fit_predict(dis_space)
     test_info["time"] = (float)(timeit.default_timer() - start)
-    cluster_dis_matrix = np.full((N, k), 0.0)
+    neg_dis_to_centroid_matrix = np.full((N, k), 0.0)
     for i in range(N):
         for j in range(k):
-            cluster_dis_matrix[i][j] = -l2_distance(dis_space[i], kmeans.cluster_centers_[j])
+            neg_dis_to_centroid_matrix[i][j] = -l2_distance(dis_space[i], kmeans.cluster_centers_[j])
 
     test_info["WCS"] = get_within_cluster_sum(kmeans.cluster_centers_, dis_space, km_clusters)
     print("WCS:", test_info["WCS"])
@@ -92,23 +98,21 @@ for i in range(10):
     ratios, num_violates = get_violates_and_ratios(nb_detail, km_clusters)
     test_info["violates"] = num_violates
     female_ratio_by_clusters = ratios_by_cluster(km_clusters, bin_att, k)
-    test_info["cluster-violates"] = get_cluster_violates(female_ratio_by_clusters, alpha, beta)
+    test_info["cluster-violates"] = get_cluster_violates(female_ratio_by_clusters, female_ratio_lower_bound,
+                                                         female_ratio_upper_bound)
     test_info["alpha"] = min(female_ratio_by_clusters)
     test_info["beta"] = max(female_ratio_by_clusters)
     print("Num violates:", num_violates)
 
-    # Notes: should we use p or q. Q is more straight forward
-
     q = soft_assign(dis_space, kmeans.cluster_centers_, alpha=1.0)
     q = np.log(q)
-    # p = target_distribution(q)
-    test_info["ILP-WCS"] = run_model(N, k, cluster_dis_matrix)
+    test_info["ILP-WCS"] = run_model(N, k, neg_dis_to_centroid_matrix)
     test_info["ILP-Prob"] = run_model(N, k, q)
     # Most-vote
     y_pred = kmeans.labels_
     partition = []
     start = timeit.default_timer()
-    for iter in range(10):
+    for iter in range(M):
         partition = get_major_votes(nb_detail, y_pred)
         y_pred = partition
     time_running = (float)(timeit.default_timer() - start)
@@ -119,7 +123,8 @@ for i in range(10):
                               "violates": num_violates,
                               "alpha": min(f_ratios),
                               "beta": max(f_ratios),
-                              "cluster-violates": get_cluster_violates(f_ratios, alpha, beta)}
+                              "cluster-violates": get_cluster_violates(f_ratios, female_ratio_lower_bound,
+                                                                       female_ratio_upper_bound)}
     # Add to total test
     total_test.append(test_info)
 

@@ -5,8 +5,8 @@ import pandas as pd
 
 from fairness.utils import *
 
-alpha = 0.3215
-beta = 0.3415
+female_ratio_lower_bound = 0.3215
+female_ratio_upper_bound = 0.3415
 
 original_data = pd.read_csv(
     "adult.full",
@@ -83,11 +83,11 @@ for test_id in range(10):
 
     q = soft_assign(dis_space, kmeans.cluster_centers_, alpha=1.0)
     q = np.log(q)
-    p = target_distribution(q)
-    test_info["ILP-WCS"] = run_model(N, k, cluster_dis_matrix, [female], [alpha], [female], [beta])
-    test_info["ILP-Prob"] = run_model(N, k, q, [female], [alpha], [female], [beta])
+    test_info["ILP-WCS"] = run_model(N, k, cluster_dis_matrix, [female], [female_ratio_lower_bound], [female],
+                                     [female_ratio_upper_bound])
+    test_info["ILP-Prob"] = run_model(N, k, q, [female], [female_ratio_lower_bound], [female],
+                                      [female_ratio_upper_bound])
     total_test.append(test_info)
-import json
 
 with open("result-group.json", 'w') as f:
     json.dump(total_test, f)
