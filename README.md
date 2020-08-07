@@ -1,13 +1,11 @@
-# Code for ECAI 2020: Constrained Clustering Via Post Processing
+# Code for DS 2020: Constrained Clustering Via Post-Processing
  
 ## Introduction
 
-Constrained clustering has been studied almost twenty years ago. However, there are still room for research.
-
-This work proposed the novel approach by converting the output of many clustering algorithm to a cluster fractional allocation matrix (CFAM).  Then, takes it as an optimization problem with requirement to statisfy (combined) different types of  constraints.
+This work proposed the novel approach by converting the output of many clustering algorithm to a cluster fractional allocation matrix (CFAM).  Then, takes it as an optimization problem with requirement to satisfy (combined) different types of  constraints.
 
 
-Moreover, we also shows practical application namely the attribute-level constraint and the (combine) fairness constraint.  
+In addition, we also shows practical application namely the attribute-level constraint and the (combined) fairness constraint.  
   
 
 ## Installation
